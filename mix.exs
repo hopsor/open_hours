@@ -1,13 +1,18 @@
 defmodule OpenHours.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :open_hours,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: package(),
+      description: description(),
+      docs: docs()
     ]
   end
 
@@ -23,6 +28,32 @@ defmodule OpenHours.MixProject do
     [
       {:tzdata, git: "https://github.com/lau/tzdata.git", tag: "master"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
+    ]
+  end
+
+  defp package() do
+    [
+      files: ["lib", "mix.exs", "README.md", "LICENSE.md"],
+      maintainers: ["Victor Viruete"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub": "https://github.com/hopsor/open_hours"
+      }
+    ]
+  end
+
+  defp description() do
+    """
+    Time calculations using business hours
+    """
+  end
+
+  defp docs() do
+    [
+      main: "OpenHours",
+      source_ref: "v#{@version}",
+      canonical: "http://hexdocs.pm/open_hours",
+      source_url: "https://github.com/hopsor/open_hours"
     ]
   end
 end
