@@ -51,7 +51,7 @@ There are five settings to configure in a schedule:
 
 OpenHours offers two main functionalities.
 
-### Checking a DateTime is within open hours.
+### Checking a DateTime is within open hours
 
 ```elixir
 > at = DateTime.from_naive!(~N[2019-01-15 14:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
