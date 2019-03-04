@@ -1,5 +1,7 @@
 # OpenHours
 
+[![Build Status](https://travis-ci.org/hopsor/open_hours.svg?branch=master)](https://travis-ci.org/hopsor/open_hours)
+
 OpenHours is an Elixir package aimed to help with time calculations using business hours.
 
 It's inspired by the amazing ruby gem [biz](https://github.com/zendesk/biz) developed by Zendesk.
