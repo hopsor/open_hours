@@ -26,7 +26,7 @@ defmodule OpenHours.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:tzdata, "~> 1.0.0-rc.0"},
+      {:tzdata, "~> 1.0.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
