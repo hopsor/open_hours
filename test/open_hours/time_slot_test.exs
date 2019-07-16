@@ -77,6 +77,41 @@ defmodule OpenHours.TimeSlotTest do
     end
   end
 
+  describe "from/3" do
+    test "returns proper timeslots when schedule contains data" do
+      schedule = %Schedule{
+        hours: %{
+          mon: [{~T[09:00:00], ~T[14:00:00]}, {~T[15:00:00], ~T[20:00:00]}],
+          tue: [{~T[09:00:00], ~T[14:00:00]}, {~T[15:00:00], ~T[20:00:00]}],
+          wed: [{~T[09:00:00], ~T[14:00:00]}, {~T[15:00:00], ~T[20:00:00]}],
+          thu: [{~T[09:00:00], ~T[14:00:00]}, {~T[15:00:00], ~T[20:00:00]}]
+        },
+        breaks: [
+          # Wednesday
+          {~D[2019-07-16], [{~T[15:00:00], ~T[20:00:00]}]},
+          {~D[2019-07-17], [{~T[09:00:00], ~T[14:00:00]}]}
+        ],
+        time_zone: "Europe/Madrid"
+      }
+
+      # Tuesday
+      instant = build_dt(~N[2019-07-16 12:00:00])
+
+      expected_time_slots = [
+        %TimeSlot{
+          starts_at: build_dt(~N[2019-07-16 09:00:00]),
+          ends_at: build_dt(~N[2019-07-16 14:00:00])
+        },
+        %TimeSlot{
+          starts_at: build_dt(~N[2019-07-17 15:00:00]),
+          ends_at: build_dt(~N[2019-07-17 20:00:00])
+        }
+      ]
+
+      assert TimeSlot.from(schedule, instant, 2) == expected_time_slots
+    end
+  end
+
   defp build_dt(naive_datetime) do
     DateTime.from_naive!(naive_datetime, "Europe/Madrid", Tzdata.TimeZoneDatabase)
   end

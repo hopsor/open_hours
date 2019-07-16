@@ -44,13 +44,44 @@ defmodule OpenHours.TimeSlot do
     |> DateTime.to_date()
     |> Date.range(DateTime.to_date(ends_at))
     |> Enum.reject(&Enum.member?(schedule.holidays, &1))
-    |> Enum.flat_map(&time_slots_for(schedule, starts_at, ends_at, &1))
+    |> Enum.flat_map(&time_slots_for(schedule, &1))
+  end
+
+  @doc """
+  """
+  @spec from(OpenHours.Schedule.t(), DateTime.t(), integer) :: [t()]
+  def from(
+        %Schedule{time_zone: schedule_tz} = schedule,
+        %DateTime{time_zone: instant_tz} = instant,
+        limit \\ 1
+      )
+      when schedule_tz != instant_tz do
+    {:ok, shifted_instant} = DateTime.shift_zone(instant, schedule_tz, Tzdata.TimeZoneDatabase)
+    from(schedule, shifted_instant, limit)
+  end
+
+  def from(%Schedule{} = schedule, %DateTime{} = instant, limit) do
+    date_to_check = DateTime.to_date(instant)
+    from_scan(schedule, instant, limit, [], date_to_check)
+  end
+
+  defp from_scan(_schedule, _instant, limit, acc, _date_to_check) when length(acc) == limit, do: acc
+
+  defp from_scan(schedule, instant, limit, acc, date_to_check) do
+    slots = time_slots_for(schedule, date_to_check)
+    max = limit - length(acc)
+    next_date_to_check = Date.add(date_to_check, 1)
+
+    matching_slots =
+      slots
+      |> Enum.filter(fn %TimeSlot{ends_at: ends_at} -> ends_at >= instant end)
+      |> Enum.take(max)
+
+    from_scan(schedule, instant, limit, acc ++ matching_slots, next_date_to_check)
   end
 
   defp time_slots_for(
          %Schedule{} = schedule,
-         %DateTime{} = _starts_at,
-         %DateTime{} = _ends_at,
          %Date{} = day
        ) do
     schedule
