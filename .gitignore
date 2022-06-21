@@ -24,4 +24,6 @@ open_hours-*.tar
 
 # Other stuff
 /.elixir_ls
+.tool-versions
 .DS_Store
+
