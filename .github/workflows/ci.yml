@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    env:
+      MIX_ENV: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pair:
+              elixir: "1.8.2"
+              otp: "22.3"
+          - pair:
+              elixir: "1.16"
+              otp: "26.2"
+              lint: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Erlang and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.pair.otp }}
+          elixir-version: ${{ matrix.pair.elixir }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Ensure mix.lock is up to date
+        run: mix deps.get --check-locked
+        if: ${{ matrix.lint }}
+
+      - name: Ensure that files are formatted
+        run: mix format --check-formatted
+        if: ${{ matrix.lint }}
+
+      - name: Check for unused dependencies
+        run: mix deps.unlock --check-unused
+        if: ${{ matrix.lint }}
+
+      - name: Run tests
+        run: mix test

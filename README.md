@@ -1,6 +1,6 @@
-# OpenHours
 
-[![Build Status](https://travis-ci.org/hopsor/open_hours.svg?branch=master)](https://travis-ci.org/hopsor/open_hours) [![Package Version](https://img.shields.io/hexpm/v/open_hours.svg?color=purple)](https://hex.pm/packages/open_hours)
+# OpenHours
+[![Build Status](https://github.com/hopsor/open_hours/actions/workflows/ci.yml/badge.svg)](https://github.com/hopsor/open_hours/actions?query=workflow%3A%22CI%22) [![Package Version](https://img.shields.io/hexpm/v/open_hours.svg?color=purple)](https://hex.pm/packages/open_hours)
 
 OpenHours is an Elixir package aimed to help with time calculations using business hours.
 
