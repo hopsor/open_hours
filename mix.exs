@@ -27,7 +27,7 @@ defmodule OpenHours.MixProject do
   defp deps do
     [
       {:tzdata, "~> 1.1"},
-      {:ex_doc, "~> 0.29", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
 
