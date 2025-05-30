@@ -22,9 +22,6 @@ jobs:
           - pair:
               elixir: "1.18"
               otp: "27.1"
-          - pair:
-              elixir: "1.18.4"
-              otp: "28.0"
     steps:
       - uses: actions/checkout@v4
 
