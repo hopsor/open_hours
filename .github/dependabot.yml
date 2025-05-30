@@ -2,7 +2,5 @@ version: 2
 updates:
   - package-ecosystem: "mix"
     directory: "/"
-    reviewers:
-      - "hopsor"
     schedule:
       interval: "daily"
