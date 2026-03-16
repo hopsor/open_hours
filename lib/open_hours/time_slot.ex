@@ -44,7 +44,7 @@ defmodule OpenHours.TimeSlot do
     |> DateTime.to_date()
     |> Date.range(DateTime.to_date(ends_at))
     |> Enum.reject(&Enum.member?(schedule.holidays, &1))
-    |> Enum.flat_map(&time_slots_for(schedule, starts_at, ends_at, &1))
+    |> Enum.flat_map(&time_slots_for_day(schedule, &1))
   end
 
   @doc """
@@ -146,33 +146,10 @@ defmodule OpenHours.TimeSlot do
     |> get_intervals_for(day)
     |> Enum.map(fn {interval_start, interval_end} ->
       %TimeSlot{
-        starts_at:
-          DateTime.from_naive!(
-            build_date_time(day, interval_start),
-            schedule.time_zone,
-            Tzdata.TimeZoneDatabase
-          ),
-        ends_at:
-          DateTime.from_naive!(
-            build_date_time(day, interval_end),
-            schedule.time_zone,
-            Tzdata.TimeZoneDatabase
-          )
+        starts_at: DateTime.new!(day, interval_start, schedule.time_zone, Tzdata.TimeZoneDatabase),
+        ends_at: DateTime.new!(day, interval_end, schedule.time_zone, Tzdata.TimeZoneDatabase)
       }
     end)
-  end
-
-  defp time_slots_for(
-         %Schedule{} = schedule,
-         %DateTime{} = _starts_at,
-         %DateTime{} = _ends_at,
-         %Date{} = day
-       ) do
-    time_slots_for_day(schedule, day)
-  end
-
-  defp build_date_time(%Date{} = day, time) do
-    with {:ok, date} <- NaiveDateTime.new(day, time), do: date
   end
 
   defp get_intervals_for(
