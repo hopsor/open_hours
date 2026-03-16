@@ -47,8 +47,6 @@ defmodule OpenHours.TimeSlot do
     |> Enum.flat_map(&time_slots_for(schedule, starts_at, ends_at, &1))
   end
 
-  @max_search_days 366
-
   @doc """
   Returns the next time slots from the given DateTime, looking forward in the schedule.
 
@@ -68,15 +66,17 @@ defmodule OpenHours.TimeSlot do
     next(schedule, shifted, opts)
   end
 
+  def next(%Schedule{} = schedule, %DateTime{} = _at, _opts)
+      when schedule.hours == %{} and schedule.shifts == [] do
+    []
+  end
+
   def next(%Schedule{} = schedule, %DateTime{} = at, opts) do
     limit = Keyword.get(opts, :limit, 1)
     inclusive = Keyword.get(opts, :inclusive, true)
 
-    at
-    |> DateTime.to_date()
-    |> Date.range(Date.add(DateTime.to_date(at), @max_search_days))
-    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
-    |> Stream.flat_map(&time_slots_for_day(schedule, &1))
+    schedule
+    |> stream_forward(DateTime.to_date(at))
     |> Stream.filter(fn slot ->
       if inclusive do
         DateTime.compare(slot.ends_at, at) == :gt
@@ -106,15 +106,17 @@ defmodule OpenHours.TimeSlot do
     previous(schedule, shifted, opts)
   end
 
+  def previous(%Schedule{} = schedule, %DateTime{} = _at, _opts)
+      when schedule.hours == %{} and schedule.shifts == [] do
+    []
+  end
+
   def previous(%Schedule{} = schedule, %DateTime{} = at, opts) do
     limit = Keyword.get(opts, :limit, 1)
     inclusive = Keyword.get(opts, :inclusive, true)
 
-    at
-    |> DateTime.to_date()
-    |> Date.range(Date.add(DateTime.to_date(at), -@max_search_days), -1)
-    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
-    |> Stream.flat_map(&(schedule |> time_slots_for_day(&1) |> Enum.reverse()))
+    schedule
+    |> stream_backward(DateTime.to_date(at))
     |> Stream.filter(fn slot ->
       if inclusive do
         DateTime.compare(slot.starts_at, at) == :lt
@@ -123,6 +125,20 @@ defmodule OpenHours.TimeSlot do
       end
     end)
     |> Enum.take(limit)
+  end
+
+  defp stream_forward(%Schedule{} = schedule, %Date{} = from) do
+    from
+    |> Stream.iterate(&Date.add(&1, 1))
+    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
+    |> Stream.flat_map(&time_slots_for_day(schedule, &1))
+  end
+
+  defp stream_backward(%Schedule{} = schedule, %Date{} = from) do
+    from
+    |> Stream.iterate(&Date.add(&1, -1))
+    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
+    |> Stream.flat_map(&(schedule |> time_slots_for_day(&1) |> Enum.reverse()))
   end
 
   defp time_slots_for_day(%Schedule{} = schedule, %Date{} = day) do
