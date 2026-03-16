@@ -47,12 +47,85 @@ defmodule OpenHours.TimeSlot do
     |> Enum.flat_map(&time_slots_for(schedule, starts_at, ends_at, &1))
   end
 
-  defp time_slots_for(
-         %Schedule{} = schedule,
-         %DateTime{} = _starts_at,
-         %DateTime{} = _ends_at,
-         %Date{} = day
-       ) do
+  @max_search_days 366
+
+  @doc """
+  Returns the next time slots from the given DateTime, looking forward in the schedule.
+
+  ## Options
+
+    * `:limit` - number of slots to return (default: `1`)
+    * `:inclusive` - if `true`, includes the slot containing the given DateTime (default: `true`)
+
+  Returns a list of `%TimeSlot{}` structs ordered chronologically.
+  """
+  @spec next(Schedule.t(), DateTime.t(), keyword()) :: [t()]
+  def next(schedule, at, opts \\ [])
+
+  def next(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
+      when schedule_tz != dt_tz do
+    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    next(schedule, shifted, opts)
+  end
+
+  def next(%Schedule{} = schedule, %DateTime{} = at, opts) do
+    limit = Keyword.get(opts, :limit, 1)
+    inclusive = Keyword.get(opts, :inclusive, true)
+
+    at
+    |> DateTime.to_date()
+    |> Date.range(Date.add(DateTime.to_date(at), @max_search_days))
+    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
+    |> Stream.flat_map(&time_slots_for_day(schedule, &1))
+    |> Stream.filter(fn slot ->
+      if inclusive do
+        DateTime.compare(slot.ends_at, at) == :gt
+      else
+        DateTime.compare(slot.starts_at, at) == :gt
+      end
+    end)
+    |> Enum.take(limit)
+  end
+
+  @doc """
+  Returns the previous time slots from the given DateTime, looking backward in the schedule.
+
+  ## Options
+
+    * `:limit` - number of slots to return (default: `1`)
+    * `:inclusive` - if `true`, includes the slot containing the given DateTime (default: `true`)
+
+  Returns a list of `%TimeSlot{}` structs ordered from most recent to least recent.
+  """
+  @spec previous(Schedule.t(), DateTime.t(), keyword()) :: [t()]
+  def previous(schedule, at, opts \\ [])
+
+  def previous(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
+      when schedule_tz != dt_tz do
+    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    previous(schedule, shifted, opts)
+  end
+
+  def previous(%Schedule{} = schedule, %DateTime{} = at, opts) do
+    limit = Keyword.get(opts, :limit, 1)
+    inclusive = Keyword.get(opts, :inclusive, true)
+
+    at
+    |> DateTime.to_date()
+    |> Date.range(Date.add(DateTime.to_date(at), -@max_search_days), -1)
+    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
+    |> Stream.flat_map(&(schedule |> time_slots_for_day(&1) |> Enum.reverse()))
+    |> Stream.filter(fn slot ->
+      if inclusive do
+        DateTime.compare(slot.starts_at, at) == :lt
+      else
+        DateTime.compare(slot.ends_at, at) == :lt
+      end
+    end)
+    |> Enum.take(limit)
+  end
+
+  defp time_slots_for_day(%Schedule{} = schedule, %Date{} = day) do
     schedule
     |> get_intervals_for(day)
     |> Enum.map(fn {interval_start, interval_end} ->
@@ -71,6 +144,15 @@ defmodule OpenHours.TimeSlot do
           )
       }
     end)
+  end
+
+  defp time_slots_for(
+         %Schedule{} = schedule,
+         %DateTime{} = _starts_at,
+         %DateTime{} = _ends_at,
+         %Date{} = day
+       ) do
+    time_slots_for_day(schedule, day)
   end
 
   defp build_date_time(%Date{} = day, time) do
