@@ -53,7 +53,8 @@ defmodule OpenHours.TimeSlot do
   ## Options
 
     * `:limit` - number of slots to return (default: `1`)
-    * `:inclusive` - if `true`, includes the slot containing the given DateTime (default: `true`)
+    * `:include_overlap` - if `true`, includes the slot containing the given DateTime
+      (default: `true`)
 
   Returns a list of `%TimeSlot{}` structs ordered chronologically.
   """
@@ -73,12 +74,12 @@ defmodule OpenHours.TimeSlot do
 
   def next(%Schedule{} = schedule, %DateTime{} = at, opts) do
     limit = Keyword.get(opts, :limit, 1)
-    inclusive = Keyword.get(opts, :inclusive, true)
+    include_overlap = Keyword.get(opts, :include_overlap, true)
 
     schedule
     |> stream_forward(DateTime.to_date(at))
     |> Stream.filter(fn slot ->
-      if inclusive do
+      if include_overlap do
         DateTime.compare(slot.ends_at, at) == :gt
       else
         DateTime.compare(slot.starts_at, at) == :gt
@@ -93,7 +94,8 @@ defmodule OpenHours.TimeSlot do
   ## Options
 
     * `:limit` - number of slots to return (default: `1`)
-    * `:inclusive` - if `true`, includes the slot containing the given DateTime (default: `true`)
+    * `:include_overlap` - if `true`, includes the slot containing the given DateTime
+      (default: `true`)
 
   Returns a list of `%TimeSlot{}` structs ordered from most recent to least recent.
   """
@@ -113,12 +115,12 @@ defmodule OpenHours.TimeSlot do
 
   def previous(%Schedule{} = schedule, %DateTime{} = at, opts) do
     limit = Keyword.get(opts, :limit, 1)
-    inclusive = Keyword.get(opts, :inclusive, true)
+    include_overlap = Keyword.get(opts, :include_overlap, true)
 
     schedule
     |> stream_backward(DateTime.to_date(at))
     |> Stream.filter(fn slot ->
-      if inclusive do
+      if include_overlap do
         DateTime.compare(slot.starts_at, at) == :lt
       else
         DateTime.compare(slot.ends_at, at) == :lt

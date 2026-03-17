@@ -185,11 +185,11 @@ defmodule OpenHours.TimeSlotTest do
              ]
     end
 
-    test "excludes containing slot with inclusive: false" do
+    test "excludes containing slot with include_overlap: false" do
       # Wednesday 2019-01-16 10:30 is within 09:00-14:00, but we want the next one
       dt = build_dt(~N[2019-01-16 10:30:00])
 
-      assert TimeSlot.next(@schedule, dt, inclusive: false) == [
+      assert TimeSlot.next(@schedule, dt, include_overlap: false) == [
                %TimeSlot{
                  starts_at: build_dt(~N[2019-01-16 15:00:00]),
                  ends_at: build_dt(~N[2019-01-16 17:00:00])
@@ -197,10 +197,10 @@ defmodule OpenHours.TimeSlotTest do
              ]
     end
 
-    test "inclusive: false has no effect when outside business hours" do
+    test "include_overlap: false has no effect when outside business hours" do
       dt = build_dt(~N[2019-01-16 14:30:00])
 
-      assert TimeSlot.next(@schedule, dt, inclusive: false) ==
+      assert TimeSlot.next(@schedule, dt, include_overlap: false) ==
                TimeSlot.next(@schedule, dt)
     end
 
@@ -293,10 +293,10 @@ defmodule OpenHours.TimeSlotTest do
              ]
     end
 
-    test "excludes containing slot with inclusive: false" do
+    test "excludes containing slot with include_overlap: false" do
       dt = build_dt(~N[2019-01-16 10:30:00])
 
-      assert TimeSlot.previous(@schedule, dt, inclusive: false) == [
+      assert TimeSlot.previous(@schedule, dt, include_overlap: false) == [
                %TimeSlot{
                  starts_at: build_dt(~N[2019-01-14 15:00:00]),
                  ends_at: build_dt(~N[2019-01-14 20:00:00])
@@ -304,10 +304,10 @@ defmodule OpenHours.TimeSlotTest do
              ]
     end
 
-    test "inclusive: false has no effect when outside business hours" do
+    test "include_overlap: false has no effect when outside business hours" do
       dt = build_dt(~N[2019-01-16 14:30:00])
 
-      assert TimeSlot.previous(@schedule, dt, inclusive: false) ==
+      assert TimeSlot.previous(@schedule, dt, include_overlap: false) ==
                TimeSlot.previous(@schedule, dt)
     end
 
