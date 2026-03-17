@@ -1,14 +1,46 @@
 name: Publish to Hex.pm
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Release Please"]
+    types: [completed]
 
 jobs:
+  check-release:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+
+      - name: Get release tag
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG=$(gh release view --json tagName -q '.tagName')
+          else
+            TAG=$(git tag --points-at HEAD | grep '^v' | head -1)
+          fi
+          if [ -n "$TAG" ]; then
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: check-release
+    if: needs.check-release.outputs.tag != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.check-release.outputs.tag }}
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
