@@ -59,32 +59,11 @@ defmodule OpenHours.TimeSlot do
   Returns a list of `%TimeSlot{}` structs ordered chronologically.
   """
   @spec next(Schedule.t(), DateTime.t(), keyword()) :: [t()]
-  def next(schedule, at, opts \\ [])
-
-  def next(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
-      when schedule_tz != dt_tz do
-    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
-    next(schedule, shifted, opts)
-  end
-
-  def next(%Schedule{} = schedule, %DateTime{} = _at, _opts)
-      when schedule.hours == %{} and schedule.shifts == [] do
-    []
-  end
-
-  def next(%Schedule{} = schedule, %DateTime{} = at, opts) do
+  def next(schedule, at, opts \\ []) do
     limit = Keyword.get(opts, :limit, 1)
-    include_overlap = Keyword.get(opts, :include_overlap, true)
 
     schedule
-    |> stream_forward(DateTime.to_date(at))
-    |> Stream.filter(fn slot ->
-      if include_overlap do
-        DateTime.compare(slot.ends_at, at) == :gt
-      else
-        DateTime.compare(slot.starts_at, at) == :gt
-      end
-    end)
+    |> stream_next(at, Keyword.take(opts, [:include_overlap]))
     |> Enum.take(limit)
   end
 
@@ -100,25 +79,101 @@ defmodule OpenHours.TimeSlot do
   Returns a list of `%TimeSlot{}` structs ordered from most recent to least recent.
   """
   @spec previous(Schedule.t(), DateTime.t(), keyword()) :: [t()]
-  def previous(schedule, at, opts \\ [])
+  def previous(schedule, at, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 1)
 
-  def previous(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
-      when schedule_tz != dt_tz do
-    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
-    previous(schedule, shifted, opts)
+    schedule
+    |> stream_previous(at, Keyword.take(opts, [:include_overlap]))
+    |> Enum.take(limit)
   end
 
-  def previous(%Schedule{} = schedule, %DateTime{} = _at, _opts)
+  @doc """
+  Returns a lazy stream of time slots from the given DateTime, looking forward
+  in the schedule.
+
+  The stream is infinite and respects holidays, shifts, and breaks.
+
+  ## Options
+
+    * `:include_overlap` - if `true`, includes the slot containing the given
+      DateTime (default: `true`)
+
+  ## Examples
+
+      schedule
+      |> TimeSlot.stream_next(datetime)
+      |> Enum.take(5)
+
+  """
+  @spec stream_next(Schedule.t(), DateTime.t(), keyword()) :: Enumerable.t()
+  def stream_next(schedule, at, opts \\ [])
+
+  def stream_next(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
+      when schedule_tz != dt_tz do
+    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    stream_next(schedule, shifted, opts)
+  end
+
+  def stream_next(%Schedule{} = schedule, %DateTime{} = _at, _opts)
       when schedule.hours == %{} and schedule.shifts == [] do
     []
   end
 
-  def previous(%Schedule{} = schedule, %DateTime{} = at, opts) do
-    limit = Keyword.get(opts, :limit, 1)
+  def stream_next(%Schedule{} = schedule, %DateTime{} = at, opts) do
     include_overlap = Keyword.get(opts, :include_overlap, true)
 
     schedule
-    |> stream_backward(DateTime.to_date(at))
+    |> dates_forward(DateTime.to_date(at))
+    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
+    |> Stream.flat_map(&time_slots_for_day(schedule, &1))
+    |> Stream.filter(fn slot ->
+      if include_overlap do
+        DateTime.compare(slot.ends_at, at) == :gt
+      else
+        DateTime.compare(slot.starts_at, at) == :gt
+      end
+    end)
+  end
+
+  @doc """
+  Returns a lazy stream of time slots from the given DateTime, looking backward
+  in the schedule.
+
+  The stream is infinite and respects holidays, shifts, and breaks.
+
+  ## Options
+
+    * `:include_overlap` - if `true`, includes the slot containing the given
+      DateTime (default: `true`)
+
+  ## Examples
+
+      schedule
+      |> TimeSlot.stream_previous(datetime)
+      |> Enum.take(5)
+
+  """
+  @spec stream_previous(Schedule.t(), DateTime.t(), keyword()) :: Enumerable.t()
+  def stream_previous(schedule, at, opts \\ [])
+
+  def stream_previous(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
+      when schedule_tz != dt_tz do
+    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    stream_previous(schedule, shifted, opts)
+  end
+
+  def stream_previous(%Schedule{} = schedule, %DateTime{} = _at, _opts)
+      when schedule.hours == %{} and schedule.shifts == [] do
+    []
+  end
+
+  def stream_previous(%Schedule{} = schedule, %DateTime{} = at, opts) do
+    include_overlap = Keyword.get(opts, :include_overlap, true)
+
+    schedule
+    |> dates_backward(DateTime.to_date(at))
+    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
+    |> Stream.flat_map(&(schedule |> time_slots_for_day(&1) |> Enum.reverse()))
     |> Stream.filter(fn slot ->
       if include_overlap do
         DateTime.compare(slot.starts_at, at) == :lt
@@ -126,21 +181,28 @@ defmodule OpenHours.TimeSlot do
         DateTime.compare(slot.ends_at, at) == :lt
       end
     end)
-    |> Enum.take(limit)
   end
 
-  defp stream_forward(%Schedule{} = schedule, %Date{} = from) do
-    from
-    |> Stream.iterate(&Date.add(&1, 1))
-    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
-    |> Stream.flat_map(&time_slots_for_day(schedule, &1))
+  defp dates_forward(%Schedule{hours: hours, shifts: shifts}, %Date{} = from) when hours == %{} do
+    shifts
+    |> Enum.map(fn {date, _} -> date end)
+    |> Enum.sort(Date)
+    |> Enum.filter(&(Date.compare(&1, from) != :lt))
   end
 
-  defp stream_backward(%Schedule{} = schedule, %Date{} = from) do
-    from
-    |> Stream.iterate(&Date.add(&1, -1))
-    |> Stream.reject(&Enum.member?(schedule.holidays, &1))
-    |> Stream.flat_map(&(schedule |> time_slots_for_day(&1) |> Enum.reverse()))
+  defp dates_forward(_schedule, %Date{} = from) do
+    Stream.iterate(from, &Date.add(&1, 1))
+  end
+
+  defp dates_backward(%Schedule{hours: hours, shifts: shifts}, %Date{} = from) when hours == %{} do
+    shifts
+    |> Enum.map(fn {date, _} -> date end)
+    |> Enum.sort({:desc, Date})
+    |> Enum.filter(&(Date.compare(&1, from) != :gt))
+  end
+
+  defp dates_backward(_schedule, %Date{} = from) do
+    Stream.iterate(from, &Date.add(&1, -1))
   end
 
   defp time_slots_for_day(%Schedule{} = schedule, %Date{} = day) do
