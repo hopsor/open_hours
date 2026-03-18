@@ -163,20 +163,150 @@ defmodule OpenHours.OffsetTest do
     end
   end
 
+  describe "shift/3 forward by days" do
+    test "simple next business day" do
+      # Wed 10:00 + 1 day = Thu 10:00
+      dt = build_dt(~N[2019-01-16 10:00:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-17 10:00:00])
+    end
+
+    test "preserves time of day" do
+      # Wed 11:30 + 1 day = Thu 11:30
+      dt = build_dt(~N[2019-01-16 11:30:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-17 11:30:00])
+    end
+
+    test "skips holidays" do
+      # Mon 10:00 + 1 day: Tue is holiday, skip to Wed 10:00
+      dt = build_dt(~N[2019-01-14 10:00:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-16 10:00:00])
+    end
+
+    test "skips weekends" do
+      # Fri 10:00 + 1 day: skip Sat/Sun = Mon 10:00
+      dt = build_dt(~N[2019-01-18 10:00:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-21 10:00:00])
+    end
+
+    test "multiple days" do
+      # Mon 10:00 + 3 days: skip Tue (holiday) → Wed(1), Thu(2), Fri(3) = Fri 10:00
+      # Fri has shift 10-14, so 10:00 is within shift hours
+      dt = build_dt(~N[2019-01-14 10:00:00])
+      assert Offset.shift(@schedule, dt, {3, :day}) == build_dt(~N[2019-01-18 10:00:00])
+    end
+
+    test "moves to next business day when time is past all slots on target day" do
+      # Thu 15:00 + 1 day = Fri, but Fri has shift 10-14 only.
+      # 15:00 is past all slots on Fri, flows forward to Mon 09:00
+      dt = build_dt(~N[2019-01-17 15:00:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-21 09:00:00])
+    end
+
+    test "snaps to next slot when time falls between slots" do
+      # Mon 14:30 + 1 day: Tue is holiday, skip to Wed.
+      # Wed has slots 09-14, 15-17. 14:30 is between them, snap to 15:00
+      dt = build_dt(~N[2019-01-14 14:30:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-16 15:00:00])
+    end
+
+    test "starting outside business hours flows to next business day" do
+      # Mon 22:00 + 1 day: target is Wed (skip Tue holiday).
+      # 22:00 is past all slots on Wed, flows forward to Thu 09:00
+      dt = build_dt(~N[2019-01-14 22:00:00])
+      assert Offset.shift(@schedule, dt, {1, :day}) == build_dt(~N[2019-01-17 09:00:00])
+    end
+
+    test "multiple days spanning weeks" do
+      # Thu 10:00 + 3 days: Fri(1, shift), skip weekend, Mon(2), Tue(3) = Tue 10:00
+      dt = build_dt(~N[2019-01-17 10:00:00])
+      assert Offset.shift(@schedule, dt, {3, :day}) == build_dt(~N[2019-01-22 10:00:00])
+    end
+  end
+
+  describe "shift/3 backward by days" do
+    test "simple previous business day" do
+      # Thu 10:00 - 1 day = Wed 10:00
+      dt = build_dt(~N[2019-01-17 10:00:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-16 10:00:00])
+    end
+
+    test "preserves time of day" do
+      # Thu 11:30 - 1 day = Wed 11:30
+      dt = build_dt(~N[2019-01-17 11:30:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-16 11:30:00])
+    end
+
+    test "skips holidays" do
+      # Wed 10:00 - 1 day: Tue is holiday, skip to Mon 10:00
+      dt = build_dt(~N[2019-01-16 10:00:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-14 10:00:00])
+    end
+
+    test "skips weekends" do
+      # Mon 10:00 - 1 day: skip Sun/Sat = Fri 10:00
+      # Fri Jan 18 has shift 10-14, 10:00 is within
+      dt = build_dt(~N[2019-01-21 10:00:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-18 10:00:00])
+    end
+
+    test "multiple days" do
+      # Fri 10:00 - 3 days: Thu(1), Wed(2), Mon(3, skip Tue holiday) = Mon 10:00
+      dt = build_dt(~N[2019-01-18 10:00:00])
+      assert Offset.shift(@schedule, dt, {-3, :day}) == build_dt(~N[2019-01-14 10:00:00])
+    end
+
+    test "snaps to end of business when time is outside target day hours" do
+      # Mon 19:00 - 1 day: previous business day is Fri (Jan 18, skip weekend).
+      # Fri has shift 10-14, 19:00 is outside, snap to end of business = Fri 14:00
+      dt = build_dt(~N[2019-01-21 19:00:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-18 14:00:00])
+    end
+
+    test "snaps to previous slot when time falls between slots" do
+      # Thu 14:30 - 1 day: Wed.
+      # Wed has slots 09-14, 15-17. 14:30 is between them, snap to 14:00
+      dt = build_dt(~N[2019-01-17 14:30:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-16 14:00:00])
+    end
+
+    test "starting outside business hours flows to previous business day" do
+      # Thu 06:00 - 1 day: target is Wed.
+      # 06:00 is before all slots on Wed, flows backward to Mon 20:00 (skip Tue holiday)
+      dt = build_dt(~N[2019-01-17 06:00:00])
+      assert Offset.shift(@schedule, dt, {-1, :day}) == build_dt(~N[2019-01-14 20:00:00])
+    end
+  end
+
   describe "shift/3 error handling" do
     test "raises on unsupported unit" do
       dt = build_dt(~N[2019-01-16 10:00:00])
 
-      assert_raise ArgumentError, "unsupported unit :day, expected :hour or :minute", fn ->
-        Offset.shift(@schedule, dt, {1, :day})
+      assert_raise ArgumentError, "unsupported unit :second, expected :hour, :minute, or :day", fn ->
+        Offset.shift(@schedule, dt, {1, :second})
       end
     end
 
-    test "raises on zero amount" do
+    test "raises on zero hour amount" do
       dt = build_dt(~N[2019-01-16 10:00:00])
 
       assert_raise ArgumentError, "amount must be a non-zero integer, got: 0", fn ->
         Offset.shift(@schedule, dt, {0, :hour})
+      end
+    end
+
+    test "raises on zero minute amount" do
+      dt = build_dt(~N[2019-01-16 10:00:00])
+
+      assert_raise ArgumentError, "amount must be a non-zero integer, got: 0", fn ->
+        Offset.shift(@schedule, dt, {0, :minute})
+      end
+    end
+
+    test "raises on zero day amount" do
+      dt = build_dt(~N[2019-01-16 10:00:00])
+
+      assert_raise ArgumentError, "amount must be a non-zero integer, got: 0", fn ->
+        Offset.shift(@schedule, dt, {0, :day})
       end
     end
 
