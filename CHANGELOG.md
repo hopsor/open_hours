@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/hopsor/open_hours/compare/v0.2.0...v0.3.0) (2026-03-27)
+
+
+### Features
+
+* add :day unit to Offset.shift/3 for business day arithmetic ([#36](https://github.com/hopsor/open_hours/issues/36)) ([3383599](https://github.com/hopsor/open_hours/commit/3383599725f1f44638ead9d1fc0d07282b21ae9c))
+* add stream_next/3 and stream_previous/3 to TimeSlot ([#35](https://github.com/hopsor/open_hours/issues/35)) ([0d671dc](https://github.com/hopsor/open_hours/commit/0d671dc7ca952568eb89e49ceb1c1ea4198156f3))
+
+
+### Documentation
+
+* add new features to README ([#33](https://github.com/hopsor/open_hours/issues/33)) ([127f1f0](https://github.com/hopsor/open_hours/commit/127f1f087a789260f186e1931060f46a68fb3442))
+
 ## [0.2.0](https://github.com/hopsor/open_hours/compare/v0.1.2...v0.2.0) (2026-03-17)
 
 
