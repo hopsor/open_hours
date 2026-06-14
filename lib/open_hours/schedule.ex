@@ -94,7 +94,7 @@ defmodule OpenHours.Schedule do
   @spec in_hours?(OpenHours.Schedule.t(), DateTime.t()) :: boolean()
   def in_hours?(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: date_tz} = at)
       when schedule_tz != date_tz do
-    {:ok, shifted_at} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    {:ok, shifted_at} = DateTime.shift_zone(at, schedule_tz, OpenHours.TimeZoneDatabase.database())
     in_hours?(schedule, shifted_at)
   end
 

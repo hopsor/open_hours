@@ -25,7 +25,7 @@ defmodule OpenHours.TimeSlot do
         %DateTime{} = ends_at
       )
       when schedule_tz != start_tz do
-    {:ok, shifted_starts_at} = DateTime.shift_zone(starts_at, schedule_tz, Tzdata.TimeZoneDatabase)
+    {:ok, shifted_starts_at} = DateTime.shift_zone(starts_at, schedule_tz, OpenHours.TimeZoneDatabase.database())
     between(schedule, shifted_starts_at, ends_at)
   end
 
@@ -35,7 +35,7 @@ defmodule OpenHours.TimeSlot do
         %DateTime{time_zone: end_tz} = ends_at
       )
       when schedule_tz != end_tz do
-    {:ok, shifted_ends_at} = DateTime.shift_zone(ends_at, schedule_tz, Tzdata.TimeZoneDatabase)
+    {:ok, shifted_ends_at} = DateTime.shift_zone(ends_at, schedule_tz, OpenHours.TimeZoneDatabase.database())
     between(schedule, starts_at, shifted_ends_at)
   end
 
@@ -110,7 +110,7 @@ defmodule OpenHours.TimeSlot do
 
   def stream_next(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
       when schedule_tz != dt_tz do
-    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, OpenHours.TimeZoneDatabase.database())
     stream_next(schedule, shifted, opts)
   end
 
@@ -158,7 +158,7 @@ defmodule OpenHours.TimeSlot do
 
   def stream_previous(%Schedule{time_zone: schedule_tz} = schedule, %DateTime{time_zone: dt_tz} = at, opts)
       when schedule_tz != dt_tz do
-    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, Tzdata.TimeZoneDatabase)
+    {:ok, shifted} = DateTime.shift_zone(at, schedule_tz, OpenHours.TimeZoneDatabase.database())
     stream_previous(schedule, shifted, opts)
   end
 
@@ -210,8 +210,8 @@ defmodule OpenHours.TimeSlot do
     |> get_intervals_for(day)
     |> Enum.map(fn {interval_start, interval_end} ->
       %TimeSlot{
-        starts_at: DateTime.new!(day, interval_start, schedule.time_zone, Tzdata.TimeZoneDatabase),
-        ends_at: DateTime.new!(day, interval_end, schedule.time_zone, Tzdata.TimeZoneDatabase)
+        starts_at: DateTime.new!(day, interval_start, schedule.time_zone, OpenHours.TimeZoneDatabase.database()),
+        ends_at: DateTime.new!(day, interval_end, schedule.time_zone, OpenHours.TimeZoneDatabase.database())
       }
     end)
   end
