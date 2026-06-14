@@ -2,7 +2,9 @@ defmodule OpenHours.TimeZoneDatabase do
   @moduledoc """
   Resolves the configured `Calendar.TimeZoneDatabase` implementation.
 
-  By default, `Tzdata.TimeZoneDatabase` is used. You can override this by setting:
+  By default, the Elixir global time zone database is used (set via
+  `Calendar.put_time_zone_database/1`). You can override this for OpenHours
+  specifically by setting:
 
       config :open_hours, :time_zone_database, Tz.TimeZoneDatabase
 
@@ -14,6 +16,6 @@ defmodule OpenHours.TimeZoneDatabase do
   """
   @spec database() :: module()
   def database do
-    Application.get_env(:open_hours, :time_zone_database, Tzdata.TimeZoneDatabase)
+    Application.get_env(:open_hours, :time_zone_database, Calendar.get_time_zone_database())
   end
 end
