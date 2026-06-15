@@ -14,14 +14,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: 
+        include:
           - pair:
               elixir: "1.16"
               otp: "26.2"
               lint: lint
           - pair:
               elixir: "1.18"
-              otp: "27.1"
+              otp: "27.3"
     steps:
       - uses: actions/checkout@v6
 
