@@ -13,10 +13,13 @@ The package can be installed by adding `open_hours` to your list of dependencies
 ```elixir
 def deps do
   [
-    {:open_hours, "~> 0.2.0"}
+    {:open_hours, "~> 0.4.0"}
   ]
 end
 ```
+
+If you do not already have a timezone database (eg tz or tzdata) configured for your Elixir application
+you will also need to do that. We recommend [TZ](https://tz.hexdocs.pm/readme.html)
 
 ## Usage
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.0](https://github.com/hopsor/open_hours/compare/v0.2.0...v0.4.0) (TBD)
+
+* Potentialy breaking chaneg: Make the timezone database configurable ([#41](https://github.com/hopsor/open_hours/pull/41))
+
 ## [0.3.0](https://github.com/hopsor/open_hours/compare/v0.2.0...v0.3.0) (2026-03-27)
 
 
