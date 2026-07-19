@@ -23,7 +23,7 @@ jobs:
               elixir: "1.18"
               otp: "27.3"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Erlang and Elixir
         uses: erlef/setup-beam@v1
