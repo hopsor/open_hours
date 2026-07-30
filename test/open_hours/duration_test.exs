@@ -158,6 +158,6 @@ defmodule OpenHours.DurationTest do
   end
 
   defp build_dt(naive_datetime) do
-    DateTime.from_naive!(naive_datetime, "Europe/Madrid", Tzdata.TimeZoneDatabase)
+    DateTime.from_naive!(naive_datetime, "Europe/Madrid")
   end
 end
