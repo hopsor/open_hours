@@ -18,18 +18,26 @@ def deps do
 end
 ```
 
-OpenHours does **not** have a hard dependency on any specific time zone database. It works with any library that implements the `Calendar.TimeZoneDatabase` protocol (e.g. [tz](https://hex.pm/packages/tz), [tzdata](https://hex.pm/packages/tzdata)).
+OpenHours does **not** install a time zone database for you. It is database-agnostic and works with any library that implements the `Calendar.TimeZoneDatabase` protocol (e.g. [tz](https://hex.pm/packages/tz), [tzdata](https://hex.pm/packages/tzdata), or a custom implementation).
 
 ### Time zone database configuration
 
-You must configure a time zone database in your application's config. Add the following to your `config/config.exs` (or environment-specific config).
-
-For example, if you choose to use [tz](https://hex.pm/packages/tz), add it to your dependencies and configure it:
+You **must** bring your own time zone database and configure it. Add the database package to your `mix.exs` dependencies and set it in your config:
 
 ```elixir
+# mix.exs
+def deps do
+  [
+    {:open_hours, "~> 1.0"},
+    {:tz, "~> 0.28.2"}  # or tzdata, or any Calendar.TimeZoneDatabase impl
+  ]
+end
+
 # config/config.exs
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
 ```
+
+> **Note:** OpenHours lists `tz` as an optional dependency in its own `mix.exs` for development and testing only. Optional dependencies are not installed transitively — you must explicitly add your chosen time zone database to your application's dependencies.
 
 ## Usage
 
