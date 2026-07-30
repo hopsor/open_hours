@@ -281,9 +281,11 @@ defmodule OpenHours.OffsetTest do
     test "raises on unsupported unit" do
       dt = build_dt(~N[2019-01-16 10:00:00])
 
-      assert_raise ArgumentError, "unsupported unit :second, expected :hour, :minute, or :day", fn ->
-        Offset.shift(@schedule, dt, {1, :second})
-      end
+      assert_raise ArgumentError,
+                   "unsupported unit :second, expected :hour, :minute, or :day",
+                   fn ->
+                     Offset.shift(@schedule, dt, {1, :second})
+                   end
     end
 
     test "raises on zero hour amount" do
@@ -321,6 +323,6 @@ defmodule OpenHours.OffsetTest do
   end
 
   defp build_dt(naive_datetime) do
-    DateTime.from_naive!(naive_datetime, "Europe/Madrid", Tzdata.TimeZoneDatabase)
+    DateTime.from_naive!(naive_datetime, "Europe/Madrid")
   end
 end

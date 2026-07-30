@@ -13,10 +13,31 @@ The package can be installed by adding `open_hours` to your list of dependencies
 ```elixir
 def deps do
   [
-    {:open_hours, "~> 0.2.0"}
+    {:open_hours, "~> 1.0"}
   ]
 end
 ```
+
+OpenHours does **not** install a time zone database for you. It is database-agnostic and works with any library that implements the `Calendar.TimeZoneDatabase` protocol (e.g. [tz](https://hex.pm/packages/tz), [tzdata](https://hex.pm/packages/tzdata), or a custom implementation).
+
+### Time zone database configuration
+
+You **must** bring your own time zone database and configure it. Add the database package to your `mix.exs` dependencies and set it in your config:
+
+```elixir
+# mix.exs
+def deps do
+  [
+    {:open_hours, "~> 1.0"},
+    {:tz, "~> 0.28.2"}  # or tzdata, or any Calendar.TimeZoneDatabase impl
+  ]
+end
+
+# config/config.exs
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+```
+
+> **Note:** OpenHours lists `tz` as an optional dependency in its own `mix.exs` for development and testing only. Optional dependencies are not installed transitively — you must explicitly add your chosen time zone database to your application's dependencies.
 
 ## Usage
 
@@ -56,13 +77,13 @@ OpenHours offers the following functionalities.
 ### Checking a DateTime is within open hours
 
 ```elixir
-> at = DateTime.from_naive!(~N[2019-01-15 14:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> at = DateTime.from_naive!(~N[2019-01-15 14:00:00], "Europe/Madrid")
 #DateTime<2019-01-15 14:00:00+01:00 CET Europe/Madrid>
 
 > OpenHours.Schedule.in_hours?(schedule, at)
 true
 
-> at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid")
 #DateTime<2019-01-14 12:00:00+01:00 CET Europe/Madrid>
 
 > OpenHours.Schedule.in_hours?(schedule, at)
@@ -72,10 +93,10 @@ false
 ### Calculate all TimeSlot between two dates
 
 ```elixir
-> starts_at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> starts_at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid")
 #DateTime<2019-01-14 12:00:00+01:00 CET Europe/Madrid>
 
-> ends_at = DateTime.from_naive!(~N[2019-01-16 22:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> ends_at = DateTime.from_naive!(~N[2019-01-16 22:00:00], "Europe/Madrid")
 #DateTime<2019-01-16 22:00:00+01:00 CET Europe/Madrid>
 
 > OpenHours.TimeSlot.between(schedule, starts_at, ends_at)
@@ -100,10 +121,10 @@ false
 Use `OpenHours.Duration.between/3` to calculate the amount of business time (in seconds) between two DateTimes. Non-working hours, weekends, holidays, and breaks are excluded.
 
 ```elixir
-> starts_at = DateTime.from_naive!(~N[2019-01-15 10:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> starts_at = DateTime.from_naive!(~N[2019-01-15 10:00:00], "Europe/Madrid")
 #DateTime<2019-01-15 10:00:00+01:00 CET Europe/Madrid>
 
-> ends_at = DateTime.from_naive!(~N[2019-01-16 11:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> ends_at = DateTime.from_naive!(~N[2019-01-16 11:00:00], "Europe/Madrid")
 #DateTime<2019-01-16 11:00:00+01:00 CET Europe/Madrid>
 
 > OpenHours.Duration.between(schedule, starts_at, ends_at)
@@ -115,7 +136,7 @@ Use `OpenHours.Duration.between/3` to calculate the amount of business time (in 
 Use `OpenHours.TimeSlot.next/3` and `OpenHours.TimeSlot.previous/3` to find upcoming or past time slots from a given DateTime.
 
 ```elixir
-> at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid")
 #DateTime<2019-01-14 12:00:00+01:00 CET Europe/Madrid>
 
 > OpenHours.TimeSlot.next(schedule, at, limit: 2)
@@ -144,7 +165,7 @@ Use `OpenHours.TimeSlot.next/3` and `OpenHours.TimeSlot.previous/3` to find upco
 Use `OpenHours.Offset.shift/3` to shift a DateTime forward or backward by a given amount of business time. The result skips over non-working hours, weekends, holidays, and breaks.
 
 ```elixir
-> at = DateTime.from_naive!(~N[2019-01-15 14:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+> at = DateTime.from_naive!(~N[2019-01-15 14:00:00], "Europe/Madrid")
 #DateTime<2019-01-15 14:00:00+01:00 CET Europe/Madrid>
 
 > OpenHours.Offset.shift(schedule, at, {2, :hour})

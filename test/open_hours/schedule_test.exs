@@ -12,7 +12,7 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == true
     end
@@ -25,14 +25,14 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 14:30:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 14:30:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == false
     end
 
     test "returns false when the schedule is empty" do
       schedule = %Schedule{time_zone: "Europe/Madrid"}
-      {:ok, at} = DateTime.now("Europe/Madrid", Tzdata.TimeZoneDatabase)
+      {:ok, at} = DateTime.now("Europe/Madrid")
       assert Schedule.in_hours?(schedule, at) == false
     end
 
@@ -45,7 +45,7 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 14:30:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 14:30:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == false
     end
@@ -61,7 +61,7 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 13:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 13:00:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == false
     end
@@ -77,7 +77,7 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 10:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 10:00:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == true
     end
@@ -93,7 +93,7 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 16:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 16:00:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == false
     end
@@ -109,7 +109,7 @@ defmodule OpenHours.ScheduleTest do
         time_zone: "Europe/Madrid"
       }
 
-      at = DateTime.from_naive!(~N[2019-01-14 14:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      at = DateTime.from_naive!(~N[2019-01-14 14:00:00], "Europe/Madrid")
 
       assert Schedule.in_hours?(schedule, at) == true
     end

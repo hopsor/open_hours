@@ -86,9 +86,9 @@ defmodule OpenHours.Offset do
       ...>   },
       ...>   time_zone: "Europe/Madrid"
       ...> }
-      iex> dt = DateTime.from_naive!(~N[2019-01-14 10:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      iex> dt = DateTime.from_naive!(~N[2019-01-14 10:00:00], "Europe/Madrid")
       iex> OpenHours.Offset.shift(schedule, dt, {2, :hour})
-      DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid", Tzdata.TimeZoneDatabase)
+      DateTime.from_naive!(~N[2019-01-14 12:00:00], "Europe/Madrid")
 
   """
   @spec shift(Schedule.t(), DateTime.t(), duration()) :: DateTime.t()
@@ -98,7 +98,7 @@ defmodule OpenHours.Offset do
         duration
       )
       when schedule_tz != dt_tz do
-    {:ok, shifted} = DateTime.shift_zone(dt, schedule_tz, Tzdata.TimeZoneDatabase)
+    {:ok, shifted} = DateTime.shift_zone(dt, schedule_tz)
     shift(schedule, shifted, duration)
   end
 
@@ -142,7 +142,7 @@ defmodule OpenHours.Offset do
     available = DateTime.diff(slot.ends_at, position)
 
     if available >= remaining_seconds do
-      DateTime.add(position, remaining_seconds, :second, Tzdata.TimeZoneDatabase)
+      DateTime.add(position, remaining_seconds, :second)
     else
       shift_forward(schedule, slot.ends_at, remaining_seconds - available)
     end
@@ -160,7 +160,7 @@ defmodule OpenHours.Offset do
     available = DateTime.diff(position, slot.starts_at)
 
     if available >= remaining_seconds do
-      DateTime.add(position, -remaining_seconds, :second, Tzdata.TimeZoneDatabase)
+      DateTime.add(position, -remaining_seconds, :second)
     else
       shift_backward(schedule, slot.starts_at, remaining_seconds - available)
     end
@@ -206,7 +206,7 @@ defmodule OpenHours.Offset do
   end
 
   defp snap_to_business_time(schedule, date, time, direction) do
-    dt = DateTime.new!(date, time, schedule.time_zone, Tzdata.TimeZoneDatabase)
+    dt = DateTime.new!(date, time, schedule.time_zone)
 
     if Schedule.in_hours?(schedule, dt) do
       dt

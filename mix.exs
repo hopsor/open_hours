@@ -19,14 +19,14 @@ defmodule OpenHours.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :tzdata]
+      extra_applications: [:logger]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:tzdata, "~> 1.1"},
+      {:tz, "~> 0.28.2", optional: true},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
