@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0](https://github.com/hopsor/open_hours/compare/v0.3.0...v1.0.0) (2026-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* make open_hours time zone database agnostic. See `UPGRADING.md`.
+
+### Features
+
+* make open_hours time zone database agnostic. See `UPGRADING.md`. ([371a00e](https://github.com/hopsor/open_hours/commit/371a00eff89b6713e683e40ae76285f2c7bb7052))
+
+
+### Documentation
+
+* add UPGRADING.md with v1.0 migration guide ([#47](https://github.com/hopsor/open_hours/issues/47)) ([da9e1fc](https://github.com/hopsor/open_hours/commit/da9e1fc6662d10f912f5825bd48d8cfc8ea579e2))
+
 ## [0.3.0](https://github.com/hopsor/open_hours/compare/v0.2.0...v0.3.0) (2026-03-27)
 
 
