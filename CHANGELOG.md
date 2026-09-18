@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/hopsor/open_hours/compare/v1.0.0...v1.0.1) (2026-09-18)
+
+
+### Dependencies
+
+* bump ex_doc from 0.40.3 to 0.40.4 ([#48](https://github.com/hopsor/open_hours/issues/48)) ([7920251](https://github.com/hopsor/open_hours/commit/7920251f573e0bc1a39c526fec8dbbc4c6cc7dd5))
+* bump tz from 0.28.2 to 0.28.4 ([#49](https://github.com/hopsor/open_hours/issues/49)) ([3fd550e](https://github.com/hopsor/open_hours/commit/3fd550edb19fe70fe20240d11af2e6598c21c957))
+
 ## [1.0.0](https://github.com/hopsor/open_hours/compare/v0.3.0...v1.0.0) (2026-07-30)
 
 
