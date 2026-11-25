@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/hopsor/open_hours/compare/v1.0.1...v1.0.2) (2026-11-25)
+
+
+### Dependencies
+
+* bump ex_doc from 0.40.4 to 0.40.5 ([#51](https://github.com/hopsor/open_hours/issues/51)) ([430e3cc](https://github.com/hopsor/open_hours/commit/430e3cc8f369b9d6cfc3630399cf8d7c6b66d3c8))
+
 ## [1.0.1](https://github.com/hopsor/open_hours/compare/v1.0.0...v1.0.1) (2026-09-18)
 
 
